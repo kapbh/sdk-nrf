@@ -13,6 +13,17 @@ manifest (west.yml).
 Documentation
 *************
 
-Official latest documentation at https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/index.html
+Documentation is available at https://files.nordicsemi.com/artifactory/NCS/Wi-Fi/docs/
 
-For earlier versions, open the latest version and use the drop-down under the title header.
+Steps for viewing the documentation:
+------------------------------------
+
+1. Download `nrf70_off_raw_tx_doc.tgz` from the link provided above.
+2. Unpack the package by running `tar -xf nrf70_off_raw_tx_doc.tgz`.
+3. Open nrf/index.html from your favourite browser. 
+
+Relevant pages in the documentation:
+
+1. Protocols->Wi-Fi->Advanced modes->Offloaded raw transmit operation
+2. Samples -> Wi-Fi samples -> Wi-Fi: Offloaded raw TX
+
