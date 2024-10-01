@@ -10,15 +10,10 @@ libraries, samples, and applications.
 It is also the SDK's west manifest repository, containing the nRF Connect SDK
 manifest (west.yml).
 
-Documentation
-*************
-
-Documentation is available at https://files.nordicsemi.com/artifactory/NCS/Wi-Fi/docs/
-
 Steps for viewing the documentation:
 ------------------------------------
 
-1. Download `nrf70_off_raw_tx_doc.tgz` from the link provided above.
+1. Download `nrf70_off_raw_tx_doc.tgz` from the tagged release.
 2. Unpack the package by running `tar -xf nrf70_off_raw_tx_doc.tgz`.
 3. Open nrf/index.html from your favourite browser. 
 
