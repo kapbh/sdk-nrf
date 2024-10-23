@@ -56,23 +56,23 @@ To generate and transmit beacons, use the following commands:
 
       To generate beacons with random source MAC address and BSSID, run the following command:
 
-	      .. code-block:: console
+      .. code-block:: console
 
-	            west build -p -b nrf7002dk/nrf5340/cpuapp -- -DCONFIG_GENERATE_MAC_ADDRESS=y -DCONFIG_ENTROPY_GENERATOR=y
-   
+	 west build -p -b nrf7002dk/nrf5340/cpuapp -- -DCONFIG_GENERATE_MAC_ADDRESS=y -DCONFIG_ENTROPY_GENERATOR=y
+
    .. group-tab:: Transmit beacons
 
       To transmit beacons at a specified interval, run the following command:
 
-          .. code-block:: console
+      .. code-block:: console
 
-	            west build -p -b nrf7002dk/nrf5340/cpuapp -- -DCONFIG_BEACON_INTERVAL=200
+	 west build -p -b nrf7002dk/nrf5340/cpuapp -- -DCONFIG_BEACON_INTERVAL=200
 
 Change the board target as given below for the nRF7002 EK.
 
 .. code-block:: console
 
-      west build -p -b nrf5340dk/nrf5340/cpuapp -- -DSHIELD=nrf7002ek
+   west build -p -b nrf5340dk/nrf5340/cpuapp -- -DSHIELD=nrf7002ek
 
 Testing
 =======
