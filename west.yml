@@ -39,6 +39,10 @@ manifest:
       url-base: https://github.com/BabbleSim
     - name: bosch
       url-base: https://github.com/boschsensortec
+    - name: karun2796
+      url-base: https://github.com/karun2796
+    - name: kapbh
+      url-base: https://github.com/kapbh
 
   # If not otherwise specified, the projects below should be obtained
   # from the ncs remote.
@@ -61,7 +65,8 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: v3.5.99-ncs1-2
+      remote: kapbh
+      revision: stbc_v26
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
@@ -141,8 +146,9 @@ manifest:
       revision: v3.5.2-ncs1-2
     - name: nrfxlib
       repo-path: sdk-nrfxlib
+      remote: karun2796
       path: nrfxlib
-      revision: 9f562e6aa7291aac570d7ac0954e52f32f3758fc
+      revision: stbc_v26_nrfxlib
     - name: trusted-firmware-m
       repo-path: sdk-trusted-firmware-m
       path: modules/tee/tf-m/trusted-firmware-m
