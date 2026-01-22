@@ -35,7 +35,8 @@ manifest:
       url-base: https://github.com/boschsensortec
     - name: eembc
       url-base: https://github.com/eembc
-
+    - name: krish
+      url-base: https://github.com/krish2718
   # If not otherwise specified, the projects below should be obtained
   # from the ncs remote.
   defaults:
@@ -64,7 +65,7 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: fbabee3e816953726b564c358029bd49b01dd47e
+      revision: lat_if
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
@@ -143,7 +144,7 @@ manifest:
     - name: nrfxlib
       repo-path: sdk-nrfxlib
       path: nrfxlib
-      revision: c6627e79bef09b28cb8e56ad0be2e4b7aa9db760
+      revision: nrf71_lat_fw
     - name: trusted-firmware-m
       repo-path: sdk-trusted-firmware-m
       path: modules/tee/tf-m/trusted-firmware-m
