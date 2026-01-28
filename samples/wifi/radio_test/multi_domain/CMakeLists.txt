@@ -12,10 +12,15 @@ project(nrf_wifi_radio_test)
 target_include_directories(app PRIVATE inc)
 
 target_sources(app PRIVATE
-  src/nrf_wifi_radio_test_main.c
-  src/nrf_wifi_radio_test_shell.c
-  src/nrf_wifi_radio_ficr_shell.c
-  src/ficr_prog.c
+	src/nrf_wifi_radio_test_main.c
+	src/nrf_wifi_radio_test_shell.c
 )
+
+if(NOT CONFIG_NRF71_ON_IPC)
+	target_sources(app PRIVATE
+	src/nrf_wifi_radio_ficr_shell.c
+	src/ficr_prog.c
+	)
+endif()
 
 target_link_libraries(app PRIVATE nrf-wifi-osal)
