@@ -37,6 +37,8 @@ manifest:
       url-base: https://github.com/eembc
     - name: krish
       url-base: https://github.com/krish2718
+    - name: kapbh
+      url-base: https://github.com/kapbh
   # If not otherwise specified, the projects below should be obtained
   # from the ncs remote.
   defaults:
@@ -65,7 +67,8 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: lat_if
+      remote: kapbh
+      revision: wezen_radio_test_changes
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
@@ -143,8 +146,9 @@ manifest:
       revision: ee0cdb000b9ce3c699193a15312058c62e5afa57
     - name: nrfxlib
       repo-path: sdk-nrfxlib
+      remote: kapbh
       path: nrfxlib
-      revision: nrf71_lat_fw
+      revision: wezen_radio_test_changes
     - name: trusted-firmware-m
       repo-path: sdk-trusted-firmware-m
       path: modules/tee/tf-m/trusted-firmware-m
