@@ -1592,6 +1592,20 @@ static int nrf_wifi_radio_test_rx_cap(const struct shell *shell,
 		goto out;
 	}
 
+#ifdef CONFIG_NRF71_ON_IPC
+	rx_cap_buf = k_malloc((ctx->conf_params.capture_length * 3));
+
+	if (!rx_cap_buf) {
+		shell_fprintf(shell,
+			      SHELL_ERROR,
+			      "%s: Unable to allocate (%d) bytes for RX capture\n",
+			      __func__,
+			      (ctx->conf_params.capture_length * 3));
+		goto out;
+	}
+
+	memset(rx_cap_buf, 0, (ctx->conf_params.capture_length * 3));
+#else
 	rx_cap_buf = nrf_wifi_osal_mem_zalloc((ctx->conf_params.capture_length * 3));
 
 	if (!rx_cap_buf) {
@@ -1602,6 +1616,7 @@ static int nrf_wifi_radio_test_rx_cap(const struct shell *shell,
 			      (ctx->conf_params.capture_length * 3));
 		goto out;
 	}
+#endif /* CONFIG_NRF71_ON_IPC */
 
 	ctx->rf_test_run = true;
 	ctx->rf_test = NRF_WIFI_RF_TEST_RX_ADC_CAP;
@@ -1654,8 +1669,13 @@ static int nrf_wifi_radio_test_rx_cap(const struct shell *shell,
 
 	ret = 0;
 out:
-	if (rx_cap_buf)
+	if (rx_cap_buf) {
+#ifdef CONFIG_NRF71_ON_IPC
+		k_free(rx_cap_buf);
+#else
 		nrf_wifi_osal_mem_free(rx_cap_buf);
+#endif /* CONFIG_NRF71_ON_IPC */
+	}
 
 	ctx->rf_test_run = false;
 	ctx->rf_test = NRF_WIFI_RF_TEST_MAX;
