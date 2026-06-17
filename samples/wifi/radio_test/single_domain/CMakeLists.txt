@@ -9,27 +9,27 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(wifi_ble_radio_test)
 
-set(MULTI_DOMAIN_RT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../multi_domain)
+set(COMMON_RT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 set(PERIP_RT_DIR ${ZEPHYR_NRF_MODULE_DIR}/samples/peripheral/radio_test)
 
 if(CONFIG_NRF71_RADIO_TEST)
   target_link_libraries(app PRIVATE nrf71_wifi_radio_test_headers)
 endif()
 
-target_include_directories(app PRIVATE ${MULTI_DOMAIN_RT_DIR}/inc)
+target_include_directories(app PRIVATE ${COMMON_RT_DIR}/inc)
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE
   ${PERIP_RT_DIR}/src/main.c
   ${PERIP_RT_DIR}/src/radio_test.c
   ${PERIP_RT_DIR}/src/radio_cmd.c
-  ${MULTI_DOMAIN_RT_DIR}/src/nrf_wifi_radio_test_shell.c
+  ${COMMON_RT_DIR}/src/nrf_wifi_radio_test_shell.c
 )
 
 if(NOT CONFIG_NRF71_RADIO_TEST)
   target_sources(app PRIVATE
-    ${MULTI_DOMAIN_RT_DIR}/src/nrf_wifi_radio_ficr_shell.c
-    ${MULTI_DOMAIN_RT_DIR}/src/ficr_prog.c
+    ${COMMON_RT_DIR}/src/nrf_wifi_radio_ficr_shell.c
+    ${COMMON_RT_DIR}/src/ficr_prog.c
   )
 
 target_link_libraries(app PRIVATE nrf-wifi-osal)
