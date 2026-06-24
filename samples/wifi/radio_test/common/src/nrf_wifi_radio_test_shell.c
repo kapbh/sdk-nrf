@@ -27,6 +27,10 @@ struct nrf_wifi_ctx_zep *ctx = &rpu_drv_priv_zep.rpu_ctx_zep;
 
 #define NRF_WIFI_RADIO_TEST_INIT_TIMEOUT_MS 5000
 
+#ifdef CONFIG_NRF71_RADIO_TEST
+static bool radio_test_init_called;
+#endif /* CONFIG_NRF71_RADIO_TEST */
+
 static bool check_test_in_prog(const struct shell *shell)
 {
 	if (ctx->conf_params.rx) {
@@ -337,8 +341,17 @@ enum nrf_wifi_status nrf_wifi_radio_test_conf_init(struct rpu_conf_params *conf_
 		memcpy(conf_params->rf_params_addr, rf_params_tmp,
 		       sizeof(conf_params->rf_params_addr));
 
+		if (ctx->vtf_params.voltage == 0) {
+			ctx->vtf_params.voltage = 243;
+		}
+		if (ctx->vtf_params.temp == 0) {
+			ctx->vtf_params.temp = 25;
+		}
+
 		status = nrf_wifi_fmac_config_vtf_params(ctx->rpu_ctx,
-							 243, 25, 0,
+							 ctx->vtf_params.voltage,
+							 ctx->vtf_params.temp,
+							 ctx->vtf_params.x0_freq,
 							 &vtf_addr_tmp);
 		if (status != NRF_WIFI_STATUS_SUCCESS) {
 			goto out;
@@ -406,6 +419,10 @@ static int nrf_wifi_radio_test_set_defaults(const struct shell *shell,
 			      "Configuration init failed\n");
 		return -ENOEXEC;
 	}
+
+#ifdef CONFIG_NRF71_RADIO_TEST
+	radio_test_init_called = false;
+#endif /* CONFIG_NRF71_RADIO_TEST */
 
 	return 0;
 }
@@ -1443,6 +1460,10 @@ static int nrf_wifi_radio_test_init(const struct shell *shell,
 			      "Programming init failed\n");
 		return -ENOEXEC;
 	}
+
+#ifdef CONFIG_NRF71_RADIO_TEST
+	radio_test_init_called = true;
+#endif /* CONFIG_NRF71_RADIO_TEST */
 
 	return 0;
 }
@@ -2737,6 +2758,21 @@ static int nrf_wifi_radio_test_show_cfg(const struct shell *shell,
 		      SHELL_INFO,
 		      "tx_fec_padd_factor = %d\n",
 		      conf_params->tx_fec_padd_factor);
+
+	shell_fprintf(shell,
+		      SHELL_INFO,
+		      "vtf_voltage = %d\n",
+		      ctx->vtf_params.voltage);
+
+	shell_fprintf(shell,
+		      SHELL_INFO,
+		      "vtf_temp = %d\n",
+		      ctx->vtf_params.temp);
+
+	shell_fprintf(shell,
+		      SHELL_INFO,
+		      "vtf_x0_freq = %d\n",
+		      ctx->vtf_params.x0_freq);
 #endif /* CONFIG_NRF71_RADIO_TEST */
 	return 0;
 }
@@ -2889,6 +2925,44 @@ out:
 	return ret;
 }
 
+
+#ifdef CONFIG_NRF71_RADIO_TEST
+static int nrf_wifi_radio_test_set_config_vtf_params(const struct shell *shell,
+						     size_t argc,
+						     const char *argv[])
+{
+	char *ptr = NULL;
+	unsigned long voltage = 0;
+	unsigned long temp = 0;
+	unsigned long x0_freq = 0;
+
+	voltage = strtoul(argv[1], &ptr, 10);
+	temp = strtoul(argv[2], &ptr, 10);
+	x0_freq = strtoul(argv[3], &ptr, 10);
+
+	if (radio_test_init_called) {
+		shell_fprintf(shell,
+			      SHELL_ERROR,
+			      "VTF parameters cannot be changed after init\n");
+		return -ENOEXEC;
+	}
+
+	if (!check_test_in_prog(shell)) {
+		return -ENOEXEC;
+	}
+
+	ctx->vtf_params.voltage = voltage;
+	ctx->vtf_params.temp = temp;
+	ctx->vtf_params.x0_freq = x0_freq;
+
+	shell_fprintf(shell,
+		      SHELL_INFO,
+		      "VTF params configured: voltage=%lu, temp=%lu, x0_freq=%lu\n",
+		      voltage, temp, x0_freq);
+
+	return 0;
+}
+#endif /* CONFIG_NRF71_RADIO_TEST */
 
 static int nrf_wifi_radio_test_set_bypass_reg(const struct shell *shell,
 					      size_t argc,
@@ -3062,6 +3136,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      2,
 		      0),
 #ifdef CONFIG_NRF71_RADIO_TEST
+	SHELL_CMD_ARG(config_vtf_params,
+		      NULL,
+		      "<voltage> <temp> <x0_freq> - Set VTF parameters before init",
+		      nrf_wifi_radio_test_set_config_vtf_params,
+		      4,
+		      0),
 	SHELL_CMD_ARG(init,
 		      NULL,
 		      "<val> - Band\n"
