@@ -428,6 +428,7 @@ static int nrf_wifi_radio_test_set_defaults(const struct shell *shell,
 }
 
 
+#ifndef CONFIG_NRF71_RADIO_TEST
 static int nrf_wifi_radio_test_set_phy_calib_rxdc(const struct shell *shell,
 						  size_t argc,
 						  const char *argv[])
@@ -590,6 +591,7 @@ static int nrf_wifi_radio_test_set_phy_calib_txiq(const struct shell *shell,
 					     ~(NRF_WIFI_PHY_CALIB_FLAG_TXIQ));
 	return 0;
 }
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 
 
 static int nrf_wifi_radio_test_set_he_ltf(const struct shell *shell,
@@ -1633,7 +1635,7 @@ static int nrf_wifi_radio_test_sr_ant_switch_ctrl(const struct shell *shell,
 }
 #endif /* CONFIG_NRF70_SR_COEX_RF_SWITCH || CONFIG_NRF71_SR_COEX_RF_SWITCH */
 
-#if defined(CONFIG_NRF70_SR_COEX) || defined(CONFIG_NRF71_SR_COEX)
+#if defined(CONFIG_NRF70_SR_COEX)
 static int nrf_wifi_radio_test_config_pta(const struct shell *shell,
 					  size_t argc,
 					  const char *argv[])
@@ -1706,7 +1708,7 @@ static int nrf_wifi_radio_test_config_pta(const struct shell *shell,
 	result = result_non_pta & result_pta;
 	return result;
 }
-#endif /* CONFIG_NRF70_SR_COEX || CONFIG_NRF71_SR_COEX */
+#endif /* CONFIG_NRF70_SR_COEX */
 
 static int nrf_wifi_radio_test_rx_cap(const struct shell *shell,
 				      size_t argc,
@@ -1911,6 +1913,7 @@ out:
 }
 
 
+#ifndef CONFIG_NRF71_RADIO_TEST
 static int nrf_wifi_radio_set_dpd(const struct shell *shell,
 				  size_t argc,
 				  const char *argv[])
@@ -1957,6 +1960,7 @@ out:
 
 	return ret;
 }
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 
 static int nrf_wifi_radio_get_temperature(const struct shell *shell,
 					  size_t argc,
@@ -2021,6 +2025,7 @@ out:
 }
 
 
+#ifndef CONFIG_NRF71_RADIO_TEST
 static int nrf_wifi_radio_get_rf_rssi(const struct shell *shell,
 				      size_t argc,
 				      const char *argv[])
@@ -2051,6 +2056,7 @@ out:
 
 	return ret;
 }
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 
 
 static int nrf_wifi_radio_set_xo_val(const struct shell *shell,
@@ -2544,6 +2550,7 @@ static int nrf_wifi_radio_test_show_cfg(const struct shell *shell,
 		      "tx_pkt_gap = %d\n",
 		      conf_params->tx_pkt_gap_us);
 
+#ifndef CONFIG_NRF71_RADIO_TEST
 	shell_fprintf(shell,
 		      SHELL_INFO,
 		      "phy_calib_rxdc = %d\n",
@@ -2573,6 +2580,7 @@ static int nrf_wifi_radio_test_show_cfg(const struct shell *shell,
 		      "phy_calib_txiq = %d\n",
 		      (conf_params->phy_calib &
 		       NRF_WIFI_PHY_CALIB_FLAG_TXIQ) ? 1:0);
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 
 	shell_fprintf(shell,
 		      SHELL_INFO,
@@ -3000,6 +3008,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_test_set_defaults,
 		      1,
 		      0),
+#ifndef CONFIG_NRF71_RADIO_TEST
 	SHELL_CMD_ARG(phy_calib_rxdc,
 		      NULL,
 		      "0 - Disable RX DC calibration\n"
@@ -3035,6 +3044,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_test_set_phy_calib_txiq,
 		      2,
 		      0),
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 	SHELL_CMD_ARG(he_ltf,
 		      NULL,
 		      "0 - 1x HE LTF\n"
@@ -3181,7 +3191,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      0),
 #endif /* CONFIG_NRF70_SR_COEX_RF_SWITCH || CONFIG_NRF71_SR_COEX_RF_SWITCH */
 
-#if defined(CONFIG_NRF70_SR_COEX) || defined(CONFIG_NRF71_SR_COEX)
+#if defined(CONFIG_NRF70_SR_COEX)
 	SHELL_CMD_ARG(config_pta,
 		      NULL,
 		      " - <val> - Wi-Fi operating band 0: 2.4GHz, 1: 5GHz\n"
@@ -3190,7 +3200,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_test_config_pta,
 		      4,
 		      0),
-#endif /* CONFIG_NRF70_SR_COEX || CONFIG_NRF71_SR_COEX */
+#endif /* CONFIG_NRF70_SR_COEX */
 
 	SHELL_CMD_ARG(rx_lna_gain,
 		      NULL,
@@ -3275,6 +3285,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_test_tx_tone,
 		      2,
 		      0),
+#ifndef CONFIG_NRF71_RADIO_TEST
 	SHELL_CMD_ARG(dpd,
 		      NULL,
 		      "0 - Bypass DPD\n"
@@ -3282,6 +3293,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_set_dpd,
 		      2,
 		      0),
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 	SHELL_CMD_ARG(get_temperature,
 		      NULL,
 		      "No arguments required",
@@ -3294,12 +3306,14 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_radio_get_bat_volt,
 		      1,
 		      0),
+#ifndef CONFIG_NRF71_RADIO_TEST
 	SHELL_CMD_ARG(get_rf_rssi,
 		      NULL,
 		      "No arguments required",
 		      nrf_wifi_radio_get_rf_rssi,
 		      1,
 		      0),
+#endif /* !CONFIG_NRF71_RADIO_TEST */
 	SHELL_CMD_ARG(set_xo_val,
 		      NULL,
 		      "<val> - XO value in the range 0 to 127",

@@ -142,22 +142,6 @@ enum nrf_wifi_status nrf_wifi_rt_fmac_rf_test_tx_tone(struct nrf_wifi_fmac_dev_c
 
 
 /**
- * @brief Start/Stop RF DPD test in radio test mode.
- * @param fmac_dev_ctx Pointer to the UMAC IF context for a RPU WLAN device.
- * @param enable Enable/Disable DPD test.
- *
- * This function is used to send a command to:
- *	- The RPU firmware to start the RF DPD test in radio test mode.
- *
- * @retval NRF_WIFI_STATUS_SUCCESS On Success
- * @retval NRF_WIFI_STATUS_FAIL On failure to execute command
- */
-enum nrf_wifi_status nrf_wifi_rt_fmac_rf_test_dpd(struct nrf_wifi_fmac_dev_ctx *fmac_dev_ctx,
-						  unsigned char enable);
-
-
-
-/**
  * @brief Get temperature in Fahrenheit using temperature sensor.
  * @param fmac_dev_ctx Pointer to the UMAC IF context for a RPU WLAN device.
  *
@@ -181,19 +165,6 @@ enum nrf_wifi_status nrf_wifi_rt_fmac_rf_get_temp(struct nrf_wifi_fmac_dev_ctx *
  * @retval NRF_WIFI_STATUS_FAIL On failure to execute command
  */
 enum nrf_wifi_status nrf_wifi_rt_fmac_rf_get_bat_volt(struct nrf_wifi_fmac_dev_ctx *fmac_dev_ctx);
-
-/**
- * @brief Get RF RSSI status.
- * @param fmac_dev_ctx Pointer to the UMAC IF context for a RPU WLAN device.
- *
- * This function is used to send a command to:
- *	- The RPU firmware to get RF RSSI status in radio test mode.
- *
- * @retval NRF_WIFI_STATUS_SUCCESS On Success
- * @retval NRF_WIFI_STATUS_FAIL On failure to execute command
- */
-enum nrf_wifi_status nrf_wifi_rt_fmac_rf_get_rf_rssi(struct nrf_wifi_fmac_dev_ctx *fmac_dev_ctx);
-
 
 /**
  * @brief Set XO adjustment value.
