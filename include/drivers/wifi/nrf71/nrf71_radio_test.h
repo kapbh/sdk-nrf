@@ -45,6 +45,7 @@ struct nrf_wifi_ctx_zep {
 #endif
 	unsigned int phy_rf_params_addr[NRF71_NUM_RF_PARAM_ADDRS];
 	unsigned int vtf_buffer_start_address;
+	struct nrf_wifi_vtf_params vtf_params;
 #if defined(CONFIG_NRF71_RAW_DATA_TX) || defined(CONFIG_NRF71_RAW_DATA_RX)
 	struct k_sem channel_set_done_sem;
 	volatile int channel_set_status;
