@@ -299,8 +299,12 @@ void nrf_wifi_event_proc_disp_scan_res_zep(void *vif_ctx,
 	/* The scan results pointer is passed via scan_done_event->scan_db_addr */
 	display_results = (struct umac_display_results *)(uintptr_t)scan_done_event->scan_db_addr;
 
-	LOG_DBG("%s: scan_results_cnt = %d", __func__,
-		scan_done_event->scan_results_cnt);
+	/* SCAN-DESIGN: confirm the bulk DB read path (new nRF71 design) is used
+	 * for display scans instead of per-result SCAN_DISPLAY_RESULT events.
+	 */
+	LOG_INF("SCAN-DISP-DB read: results_cnt=%u db_addr=0x%x max_bss=%u",
+		scan_done_event->scan_results_cnt,
+		scan_done_event->scan_db_addr, max_bss_cnt);
 	for (i = 0; i < scan_done_event->scan_results_cnt; i++) {
 		struct umac_display_results *r = &display_results[i];
 

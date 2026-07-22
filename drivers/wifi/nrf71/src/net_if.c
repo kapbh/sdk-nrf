@@ -277,6 +277,18 @@ void nrf_wifi_if_rx_frm(void *os_vif_ctx, void *frm)
 		return;
 	}
 
+	/* TEMP DEBUG: trace every data frame delivered to the host stack */
+	{
+		struct net_eth_hdr *eth_hdr = NET_ETH_HDR(pkt);
+		char da[18] = {0};
+		char sa[18] = {0};
+
+		LOG_INF("RX-FRM: da=%s sa=%s ethertype=0x%04x len=%zu",
+			nrf_wifi_sprint_ll_addr_buf(eth_hdr->dst.addr, 6, da, sizeof(da)),
+			nrf_wifi_sprint_ll_addr_buf(eth_hdr->src.addr, 6, sa, sizeof(sa)),
+			net_ntohs(eth_hdr->type), net_pkt_get_len(pkt));
+	}
+
 	status = net_recv_data(iface, pkt);
 
 	if (status < 0) {
@@ -451,13 +463,13 @@ int nrf_wifi_if_send(const struct device *dev,
 			/* TODO: Make this an error once we fix ping_work sending packets despite
 			 * the interface being dormant
 			 */
-#if CONFIG_WIFI_NRF71_LOG_LEVEL >= LOG_LEVEL_DBG
+			/* TEMP DEBUG: made INF to catch dropped EAPOL/data TX in GO mode */
 			char ra_buf[18] = {0};
+			struct net_eth_hdr *eth_hdr = NET_ETH_HDR(pkt);
 
-			LOG_DBG("%s: Got packet for unknown PEER: %s", __func__,
-				nrf_wifi_sprint_ll_addr_buf(ra, 6, ra_buf,
-							    sizeof(ra_buf)));
-#endif
+			LOG_INF("TX-FRM DROP (unknown PEER): ra=%s ethertype=0x%04x",
+				nrf_wifi_sprint_ll_addr_buf(ra, 6, ra_buf, sizeof(ra_buf)),
+				net_ntohs(eth_hdr->type));
 			goto drop;
 		}
 
@@ -478,9 +490,20 @@ int nrf_wifi_if_send(const struct device *dev,
 			ret = -EPERM;
 			goto drop;
 		}
+		/* TEMP DEBUG: trace every data frame submitted to the FMAC for TX */
+		{
+			struct net_eth_hdr *eth_hdr = NET_ETH_HDR(pkt);
+			char ra_buf[18] = {0};
+
+			LOG_INF("TX-FRM: ra=%s ethertype=0x%04x peer_id=%d authorized=%d eapol=%d carr=%d",
+				nrf_wifi_sprint_ll_addr_buf(ra, 6, ra_buf, sizeof(ra_buf)),
+				net_ntohs(eth_hdr->type), peer_id, authorized, is_eapol(pkt),
+				vif_ctx_zep->if_carr_state);
+		}
 		ret = nrf_wifi_fmac_start_xmit(rpu_ctx_zep->rpu_ctx,
 					       vif_ctx_zep->vif_idx,
 					       nbuf);
+		LOG_INF("TX-FRM: start_xmit ret=%d", ret);
 #ifdef CONFIG_NRF71_RAW_DATA_TX
 	}
 #endif /* CONFIG_NRF71_RAW_DATA_TX */
@@ -654,7 +677,7 @@ enum nrf_wifi_status nrf_wifi_get_mac_addr(struct nrf_wifi_vif_ctx_zep *vif_ctx_
 	vif_ctx_zep->mac_addr.addr[0] = 0x00;
 	vif_ctx_zep->mac_addr.addr[1] = 0x00;
 	vif_ctx_zep->mac_addr.addr[2] = 0x5E;
-	vif_ctx_zep->mac_addr.addr[3] = 0x00;
+	vif_ctx_zep->mac_addr.addr[3] = 0x39;
 	vif_ctx_zep->mac_addr.addr[4] = 0x10;
 	vif_ctx_zep->mac_addr.addr[5] = 0x00;
 #endif

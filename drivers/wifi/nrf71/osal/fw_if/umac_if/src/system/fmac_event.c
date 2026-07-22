@@ -730,6 +730,12 @@ static enum nrf_wifi_status umac_event_ctrl_process(struct nrf_wifi_fmac_dev_ctx
 		}
 		break;
 	case NRF_WIFI_UMAC_EVENT_SCAN_DISPLAY_RESULT:
+		/* SCAN-DESIGN: in the new nRF71 scan-DB design, display results are
+		 * delivered in bulk via SCAN_DONE (scan_db_addr). This per-result
+		 * event should be legacy/unused - log if it ever fires.
+		 */
+		nrf_wifi_osal_log_info("SCAN-DISP-RESULT (legacy per-result event) seq=%d len=%u",
+				       umac_hdr->seq, event_len);
 		if (umac_hdr->seq != 0) {
 			more_res = true;
 		}

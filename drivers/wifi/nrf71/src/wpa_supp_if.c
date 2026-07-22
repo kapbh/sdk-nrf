@@ -251,6 +251,17 @@ void nrf_wifi_wpa_supp_event_proc_scan_res(void *if_priv,
 		}
 	}
 
+	LOG_INF("SCAN-RES bssid=%02X:%02X:%02X:%02X:%02X:%02X freq=%u lvl=%d probe_ies=%u beacon_ies=%u",
+		r->bssid[0], r->bssid[1], r->bssid[2], r->bssid[3], r->bssid[4], r->bssid[5],
+		r->freq, r->level, ie_len, beacon_ie_len);
+	if (ie && ie_len) {
+		/* IEs from the Probe Response (active) - carry P2P/WPS Device Info,
+		 * config methods, etc. Absence of this (only beacon_ies) means we
+		 * discovered the peer passively and never got a Probe Response.
+		 */
+		LOG_HEXDUMP_INF(ie, ie_len, "ProbeResp-IEs");
+	}
+
 	if (vif_ctx_zep->supp_drv_if_ctx && vif_ctx_zep->supp_callbk_fns.scan_res) {
 		vif_ctx_zep->supp_callbk_fns.scan_res(vif_ctx_zep->supp_drv_if_ctx, r, more_res);
 	}
@@ -405,6 +416,12 @@ void nrf_wifi_wpa_supp_event_proc_deauth(void *if_priv,
 		event.deauth_info.locally_generated = 1;
 	}
 
+	LOG_INF("DEAUTH-EVT: sa=%02X:%02X:%02X:%02X:%02X:%02X reason=%u from_ap=%d local_gen=%d",
+		mgmt->sa[0], mgmt->sa[1], mgmt->sa[2], mgmt->sa[3], mgmt->sa[4], mgmt->sa[5],
+		event.deauth_info.reason_code,
+		(deauth->valid_fields & NRF_WIFI_EVENT_MLME_RXDEAUTH_FROM_AP) ? 1 : 0,
+		event.deauth_info.locally_generated);
+
 	if (vif_ctx_zep->supp_drv_if_ctx && vif_ctx_zep->supp_callbk_fns.deauth) {
 		vif_ctx_zep->supp_callbk_fns.deauth(vif_ctx_zep->supp_drv_if_ctx,
 			&event, mgmt);
@@ -520,7 +537,8 @@ int nrf_wifi_wpa_supp_scan2(void *if_priv, struct wpa_driver_scan_params *params
 	}
 
 	if (vif_ctx_zep->scan_in_progress) {
-		LOG_ERR("%s: Scan already in progress", __func__);
+		LOG_ERR("%s: Scan already in progress (BUSY) - rejecting new scan req",
+			__func__);
 		ret = -EBUSY;
 		goto out;
 	}
@@ -578,6 +596,18 @@ int nrf_wifi_wpa_supp_scan2(void *if_priv, struct wpa_driver_scan_params *params
 	}
 
 	scan_info->scan_reason = SCAN_CONNECT;
+
+	LOG_INF("SCAN2-REQ n_chan=%u chan0=%u chan1=%u n_ssid=%u ssid0_len=%u p2p_probe=%d ies_len=%u",
+		scan_info->scan_params.num_scan_channels,
+		scan_info->scan_params.num_scan_channels > 0 ?
+			scan_info->scan_params.center_frequency[0] : 0,
+		scan_info->scan_params.num_scan_channels > 1 ?
+			scan_info->scan_params.center_frequency[1] : 0,
+		scan_info->scan_params.num_scan_ssids,
+		scan_info->scan_params.num_scan_ssids > 0 ?
+			scan_info->scan_params.scan_ssids[0].nrf_wifi_ssid_len : 0,
+		params->p2p_probe,
+		(unsigned int)params->extra_ies_len);
 
 	/* Copy extra_ies */
 	if (params->extra_ies_len && params->extra_ies_len <= NRF_WIFI_MAX_IE_LEN) {
@@ -1552,6 +1582,21 @@ int nrf_wifi_nl80211_send_mlme(void *if_priv, const u8 *data,
 		return -1;
 	}
 
+	if (data_len >= 2) {
+		unsigned char ftype = (data[0] >> 2) & 0x3;
+		unsigned char stype = (data[0] >> 4) & 0xf;
+
+		if (ftype == 0 && stype == 0x04) {
+			LOG_INF("P2P-FIND TX Probe Request (len=%u freq=%u):",
+				(unsigned int)data_len, freq);
+			LOG_HEXDUMP_INF(data, data_len, "TX-ProbeReq");
+		} else if (ftype == 0 && stype == 0x05) {
+			LOG_INF("P2P-FIND TX Probe Response (len=%u freq=%u):",
+				(unsigned int)data_len, freq);
+			LOG_HEXDUMP_INF(data, data_len, "TX-ProbeResp");
+		}
+	}
+
 	k_mutex_lock(&vif_ctx_zep->vif_lock, K_FOREVER);
 	if (!rpu_ctx_zep->rpu_ctx) {
 		LOG_DBG("%s: RPU context not initialized", __func__);
@@ -1694,24 +1739,39 @@ enum nrf_wifi_status nrf_wifi_parse_sband(
 
 	band->ht_cap.wpa_supp_ht_supported = event->ht_cap.nrf_wifi_ht_supported;
 	band->ht_cap.wpa_supp_cap = event->ht_cap.nrf_wifi_cap;
-	band->ht_cap.mcs.wpa_supp_rx_highest = event->ht_cap.mcs.nrf_wifi_rx_highest;
 
-	for (count = 0; count < WPA_SUPP_HT_MCS_MASK_LEN; count++) {
-		band->ht_cap.mcs.wpa_supp_rx_mask[count] =
-			event->ht_cap.mcs.nrf_wifi_rx_mask[count];
-	}
+	/*
+	 * The nRF71 RPU firmware reports the HT "Supported MCS Set" in the
+	 * canonical on-air layout {rx_highest[2], rx_mask[10], tx_params[1],
+	 * reserved[3]}. However struct nrf_wifi_event_mcs_info (a shared header
+	 * we must not modify) declares rx_mask before rx_highest, so reading the
+	 * named fields yields a 2-byte-shifted mask: rx_mask[0] would drop the
+	 * mandatory MCS 0-7 and falsely advertise MCS 16-23, which breaks HT rate
+	 * negotiation with strict clients (e.g. Intel/Linux). Parse the raw bytes
+	 * at the firmware offsets instead.
+	 */
+	{
+		const unsigned char *mcs_raw = (const unsigned char *)&event->ht_cap.mcs;
 
-	band->ht_cap.mcs.wpa_supp_tx_params = event->ht_cap.mcs.nrf_wifi_tx_params;
+		band->ht_cap.mcs.wpa_supp_rx_highest =
+			(unsigned short)(mcs_raw[0] | (mcs_raw[1] << 8));
 
-	for (count = 0; count < NRF_WIFI_HT_MCS_RES_LEN; count++) {
-
-		if (count >= WPA_SUPP_HT_MCS_RES_LEN) {
-			LOG_ERR("%s: Failed to add reserved bytes", __func__);
-			break;
+		for (count = 0; count < WPA_SUPP_HT_MCS_MASK_LEN; count++) {
+			band->ht_cap.mcs.wpa_supp_rx_mask[count] = mcs_raw[2 + count];
 		}
 
-		band->ht_cap.mcs.wpa_supp_reserved[count] =
-			event->ht_cap.mcs.nrf_wifi_reserved[count];
+		band->ht_cap.mcs.wpa_supp_tx_params = mcs_raw[2 + WPA_SUPP_HT_MCS_MASK_LEN];
+
+		for (count = 0; count < NRF_WIFI_HT_MCS_RES_LEN; count++) {
+
+			if (count >= WPA_SUPP_HT_MCS_RES_LEN) {
+				LOG_ERR("%s: Failed to add reserved bytes", __func__);
+				break;
+			}
+
+			band->ht_cap.mcs.wpa_supp_reserved[count] =
+				mcs_raw[2 + WPA_SUPP_HT_MCS_MASK_LEN + 1 + count];
+		}
 	}
 
 	band->ht_cap.wpa_supp_ampdu_factor = event->ht_cap.nrf_wifi_ampdu_factor;
@@ -1892,6 +1952,26 @@ void nrf_wifi_wpa_supp_event_mgmt_rx_callbk_fn(void *if_priv,
 	if (!mlme_event || !event_len) {
 		LOG_ERR("%s: Missing MLME event data", __func__);
 		return;
+	}
+
+	if (mlme_event->frame.frame_len >= 2) {
+		const unsigned char *fc = mlme_event->frame.frame;
+		unsigned char ftype = (fc[0] >> 2) & 0x3;
+		unsigned char stype = (fc[0] >> 4) & 0xf;
+
+		if (ftype == 0 && stype == 0x04) {
+			LOG_INF("P2P-FIND RX Probe Request (len=%u freq=%d rssi=%d):",
+				mlme_event->frame.frame_len, mlme_event->frequency,
+				mlme_event->rx_signal_dbm);
+			LOG_HEXDUMP_INF(mlme_event->frame.frame,
+					mlme_event->frame.frame_len, "RX-ProbeReq");
+		} else if (ftype == 0 && stype == 0x05) {
+			LOG_INF("P2P-FIND RX Probe Response (len=%u freq=%d rssi=%d):",
+				mlme_event->frame.frame_len, mlme_event->frequency,
+				mlme_event->rx_signal_dbm);
+			LOG_HEXDUMP_INF(mlme_event->frame.frame,
+					mlme_event->frame.frame_len, "RX-ProbeResp");
+		}
 	}
 
 	if (vif_ctx_zep->supp_drv_if_ctx && vif_ctx_zep->supp_callbk_fns.mgmt_rx) {

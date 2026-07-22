@@ -647,6 +647,25 @@ enum nrf_wifi_status nrf_wifi_sys_fmac_scan(void *dev_ctx,
 		}
 	}
 
+	/* SCAN-DESIGN: dump the scan command as sent to firmware to verify the
+	 * new nRF71 scan-DB design (scan_db_addr/scan_db_len) and scan_params ABI.
+	 */
+	nrf_wifi_osal_log_info("SCAN-CMD reason=%d(%s) db_addr=0x%x db_len=%u | params: passive=%u n_ssid=%u no_cck=%u bands=0x%x ie_len=%u dwell_a=%u dwell_p=%u n_chan=%u bt_tol=%u bt_time=%u",
+			       scan_info->scan_reason,
+			       scan_info->scan_reason == SCAN_DISPLAY ? "DISPLAY" : "CONNECT",
+			       scan_info->scan_db_addr,
+			       scan_info->scan_db_len,
+			       scan_info->scan_params.passive_scan,
+			       scan_info->scan_params.num_scan_ssids,
+			       scan_info->scan_params.no_cck,
+			       scan_info->scan_params.bands,
+			       scan_info->scan_params.ie.ie_len,
+			       scan_info->scan_params.dwell_time_active,
+			       scan_info->scan_params.dwell_time_passive,
+			       scan_info->scan_params.num_scan_channels,
+			       scan_info->scan_params.bt_grant_tolerance_time,
+			       scan_info->scan_params.bt_grant_time);
+
 	scan_cmd->umac_hdr.cmd_evnt = NRF_WIFI_UMAC_CMD_TRIGGER_SCAN;
 	scan_cmd->umac_hdr.ids.wdev_id = if_idx;
 	scan_cmd->umac_hdr.ids.valid_fields |= NRF_WIFI_INDEX_IDS_WDEV_ID_VALID;

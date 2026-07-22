@@ -175,8 +175,16 @@ void nrf_wifi_event_proc_scan_done_zep(void *vif_ctx,
 		return;
 	}
 
-	LOG_DBG("%s: scan_done_event->scan_results_cnt = %d, scan_type = %d",
-		__func__, scan_done_event->scan_results_cnt, vif_ctx_zep->scan_type);
+	/* SCAN-DESIGN: verify the SCAN_DONE event carries the new-design fields
+	 * (scan_results_cnt + scan_db_addr) populated by the firmware.
+	 */
+	LOG_INF("SCAN-DONE status=%d scan_type=%d(%s) results_cnt=%u db_addr=0x%x len=%u",
+		scan_done_event->status,
+		vif_ctx_zep->scan_type,
+		vif_ctx_zep->scan_type == SCAN_DISPLAY ? "DISPLAY" : "CONNECT",
+		scan_done_event->scan_results_cnt,
+		scan_done_event->scan_db_addr,
+		event_len);
 	switch (vif_ctx_zep->scan_type) {
 #ifdef CONFIG_NET_L2_WIFI_MGMT
 	case SCAN_DISPLAY:
