@@ -55,7 +55,7 @@ static int bytes_from_str(uint8_t *buf, int buf_len, const char *src)
 #endif /* CONFIG_WIFI_FIXED_MAC_ADDRESS_ENABLED */
 
 
-int nrf70_off_raw_tx_init(uint8_t *mac_addr, unsigned char *country_code)
+int nrf_wifi_off_raw_tx_init(uint8_t *mac_addr, unsigned char *country_code)
 {
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 	struct nrf_wifi_off_raw_tx_drv_ctx *drv_ctx = NULL;
@@ -77,7 +77,7 @@ int nrf70_off_raw_tx_init(uint8_t *mac_addr, unsigned char *country_code)
 	off_raw_tx_drv_priv.fmac_priv = nrf_wifi_off_raw_tx_fmac_init();
 
 	if (off_raw_tx_drv_priv.fmac_priv == NULL) {
-		LOG_ERR("%s: Failed to initialize nRF70 driver",
+		LOG_ERR("%s: Failed to initialize nRF71 driver",
 			__func__);
 		goto err;
 	}
@@ -193,12 +193,12 @@ err:
 	}
 
 	k_spin_unlock(&off_raw_tx_drv_priv.lock, key);
-	nrf70_off_raw_tx_deinit();
+	nrf_wifi_off_raw_tx_deinit();
 	return -1;
 }
 
 
-void nrf70_off_raw_tx_deinit(void)
+void nrf_wifi_off_raw_tx_deinit(void)
 {
 	k_spinlock_key_t key;
 	struct nrf_wifi_off_raw_tx_drv_ctx *drv_ctx = &off_raw_tx_drv_priv.drv_ctx;
@@ -243,7 +243,7 @@ static bool validate_rate(enum nrf_wifi_off_raw_tx_tput_mode tput_mode,
 	return true;
 }
 
-int nrf70_off_raw_tx_conf_update(struct nrf_wifi_off_raw_tx_conf *conf)
+int nrf_wifi_off_raw_tx_conf_update(struct nrf_wifi_off_raw_tx_conf *conf)
 {
 	int ret = -1;
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
@@ -305,7 +305,7 @@ int nrf70_off_raw_tx_conf_update(struct nrf_wifi_off_raw_tx_conf *conf)
 					       off_ctrl_params,
 					       off_tx_params);
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
-		LOG_ERR("%s: nRF70 offloaded raw TX configuration failed",
+		LOG_ERR("%s: nRF71 offloaded raw TX configuration failed",
 				      __func__);
 		goto out;
 	}
@@ -319,16 +319,16 @@ out:
 }
 
 
-int nrf70_off_raw_tx_start(struct nrf_wifi_off_raw_tx_conf *conf)
+int nrf_wifi_off_raw_tx_start(struct nrf_wifi_off_raw_tx_conf *conf)
 {
 	int ret = -1;
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
 	struct nrf_wifi_off_raw_tx_drv_ctx *drv_ctx = &off_raw_tx_drv_priv.drv_ctx;
 	k_spinlock_key_t key;
 
-	status = nrf70_off_raw_tx_conf_update(conf);
+	status = nrf_wifi_off_raw_tx_conf_update(conf);
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
-		LOG_ERR("%s: nRF70 offloaded raw TX configuration failed",
+		LOG_ERR("%s: nRF71 offloaded raw TX configuration failed",
 				      __func__);
 		goto out;
 	}
@@ -341,7 +341,7 @@ int nrf70_off_raw_tx_start(struct nrf_wifi_off_raw_tx_conf *conf)
 
 	status = nrf_wifi_off_raw_tx_fmac_start(drv_ctx->rpu_ctx);
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
-		LOG_ERR("%s: nRF70 offloaded raw TX start failed",
+		LOG_ERR("%s: nRF71 offloaded raw TX start failed",
 				      __func__);
 		goto out;
 	}
@@ -353,7 +353,7 @@ out:
 }
 
 
-int nrf70_off_raw_tx_stop(void)
+int nrf_wifi_off_raw_tx_stop(void)
 {
 	int ret = -1;
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
@@ -369,7 +369,7 @@ int nrf70_off_raw_tx_stop(void)
 
 	status = nrf_wifi_off_raw_tx_fmac_stop(drv_ctx->rpu_ctx);
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
-		LOG_ERR("%s: nRF70 offloaded raw TX stop failed",
+		LOG_ERR("%s: nRF71 offloaded raw TX stop failed",
 				      __func__);
 		goto out;
 	}
@@ -381,7 +381,7 @@ out:
 }
 
 
-int nrf70_off_raw_tx_mac_addr_get(uint8_t *mac_addr)
+int nrf_wifi_off_raw_tx_mac_addr_get(uint8_t *mac_addr)
 {
 	struct nrf_wifi_off_raw_tx_drv_ctx *drv_ctx = &off_raw_tx_drv_priv.drv_ctx;
 
@@ -394,7 +394,7 @@ int nrf70_off_raw_tx_mac_addr_get(uint8_t *mac_addr)
 	return 0;
 }
 
-int nrf70_off_raw_tx_stats(struct nrf_wifi_off_raw_tx_stats *off_raw_tx_stats)
+int nrf_wifi_off_raw_tx_stats(struct nrf_wifi_off_raw_tx_stats *off_raw_tx_stats)
 {
 	int ret = -1;
 	enum nrf_wifi_status status = NRF_WIFI_STATUS_FAIL;
@@ -415,7 +415,7 @@ int nrf70_off_raw_tx_stats(struct nrf_wifi_off_raw_tx_stats *off_raw_tx_stats)
 						    0,
 						    &stats);
 	if (status != NRF_WIFI_STATUS_SUCCESS) {
-		LOG_ERR("%s: nRF70 offloaded raw TX stats failed",
+		LOG_ERR("%s: nRF71 offloaded raw TX stats failed",
 				      __func__);
 		goto out;
 	}
